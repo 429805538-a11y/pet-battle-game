@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业绩争霸 - 双阵营宠物对战</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 15px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        /* 头部 */
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 {
+            font-size: 2.2em;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header .subtitle { color: #aaa; font-size: 0.9em; }
+        
+        /* 资源栏 */
+        .resource-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .resource {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .resource span { color: #ffd700; font-weight: bold; margin-left: 5px; }
+        
+        /* 页面切换 */
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 卡片 */
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 15px 0;
+        }
+        .card h2 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255,215,0,0.4); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        
+        /* 菜单 */
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .menu-btn {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .menu-btn:hover {
+            border-color: #ffd700;
+            transform: translateY(-3px);
+        }
+        .menu-btn .icon { font-size: 2.5em; margin-bottom: 10px; }
+        .menu-btn h3 { font-size: 1.1em; margin-bottom: 5px; }
+        .menu-btn p { color: #aaa; font-size: 0.85em; }
+        
+        /* 表单 */
+        .form-group { margin: 15px 0; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 1em;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: 2px solid #ffd700;
+            background: rgba(255,255,255,0.15);
+        }
+        
+        /* 阵营选择 */
+        .camp-select {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .camp-option {
+            flex: 1;
+            max-width: 200px;
+            padding: 25px 20px;
+            border-radius: 15px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .camp-option.service { background: rgba(255,107,107,0.2); }
+        .camp-option.new { background: rgba(78,205,196,0.2); }
+        .camp-option:hover { transform: scale(1.02); }
+        .camp-option.selected { border-color: #ffd700; }
+        .camp-option .emoji { font-size: 3em; display: block; margin-bottom: 10px; }
+        .camp-option .name { font-weight: bold; margin-bottom: 5px; }
+        .camp-option .desc { font-size: 0.8em; color: #aaa; }
+        
+        /* 头像选择 */
+        .avatar-select {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .avatar-option {
+            font-size: 2.5em;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .avatar-option:hover { background: rgba(255,255,255,0.1); }
+        .avatar-option.selected { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+        
+        /* 宠物卡片 */
+        .pokemon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .pokemon-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .pokemon-card:hover { border-color: #ffd700; transform: translateY(-3px); }
+        .pokemon-card.selected { border-color: #4ecdc4; background: rgba(78,205,196,0.1); }
+        .pokemon-card .emoji { font-size: 3em; margin-bottom: 10px; }
+        .pokemon-card .name { font-weight: bold; margin-bottom: 5px; font-size: 0.95em; }
+        .pokemon-card .type { font-size: 0.8em; color: #aaa; margin-bottom: 8px; }
+        .pokemon-card .stats { font-size: 0.75em; color: #888; }
+        .pokemon-card .price {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ffd700;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        
+        /* 对战 */
+        .battle-arena {
+            background: linear-gradient(180deg, #2d3561 0%, #1a1f3a 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            position: relative;
+        }
+        .battle-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 0;
+            position: relative;
+        }
+        .battle-side { text-align: center; flex: 1; }
+        .battle-emoji {
+            font-size: 6em;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .vs-badge {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        .battle-info {
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .battle-info .name { font-weight: bold; margin-bottom: 5px; }
+        .hp-bar {
+            width: 150px;
+            height: 18px;
+            background: #333;
+            border-radius: 9px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .hp-fill {
+            height: 100%;
+            border-radius: 9px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        .hp-fill.high { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+        .hp-fill.medium { background: linear-gradient(90deg, #FF9800, #FFC107); }
+        .hp-fill.low { background: linear-gradient(90deg, #f44336, #FF5722); }
+        
+        .battle-log {
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 15px;
+            height: 100px;
+            overflow-y: auto;
+            margin: 20px 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .battle-log .entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .battle-log .damage { color: #ff6b6b; font-weight: bold; }
+        .battle-log .heal { color: #4ecdc4; font-weight: bold; }
+        .battle-log .crit { color: #ffd700; font-weight: bold; }
+        
+        .moves-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .move-btn {
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+        }
+        .move-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .move-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .move-btn .pp {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.75em;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+        .move-btn .name { font-weight: bold; display: block; margin-bottom: 3px; }
+        .move-btn .info { font-size: 0.8em; opacity: 0.9; }
+        
+        .move-attack { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
+        .move-defense { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .move-special { background: linear-gradient(135deg, #f9ca24, #f0932b); }
+        .move-support { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+        
+        /* 结果弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            border: 2px solid #ffd700;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .modal .emoji { font-size: 5em; margin-bottom: 15px; }
+        .modal h2 { color: #ffd700; margin-bottom: 10px; }
+        .modal .rewards {
+            background: rgba(255,215,0,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        /* 数据录入 */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .reward-box {
+            background: rgba(255,215,0,0.1);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .reward-box h3 { color: #ffd700; margin-bottom: 15px; }
+        .reward-items {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .reward-item { text-align: center; }
+        .reward-item .icon { font-size: 2em; display: block; margin-bottom: 5px; }
+        .reward-item .amount { font-size: 1.3em; font-weight: bold; color: #ffd700; }
+        
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .battle-field { flex-direction: column; gap: 20px; }
+            .vs-badge { order: -1; }
+            .menu { grid-template-columns: 1fr; }
+            .camp-select { flex-direction: column; align-items: center; }
+            .camp-option { max-width: 100%; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🏆 业绩争霸</h1>
+            <div class="subtitle">
+                <span style="color:#ff6b6b">🔴 服务方</span> 林瑞镜队 / 谢晓珊队
+                <span style="margin:0 10px">⚔️</span>
+                <span style="color:#4ecdc4">🔵 新开方</span> 蓝Buff队 / 巅峰开拓者
+            </div>
+        </div>
+
+        <!-- 资源栏 -->
+        <div class="resource-bar" id="resourceBar" style="display:none">
+            <div class="resource">🪙 金币<span id="gold">1000</span></div>
+            <div class="resource">💎 水晶<span id="crystal">0</span></div>
+            <div class="resource">⚡ 能量<span id="energy">0</span></div>
+            <div class="resource">💎 精华<span id="essence">0</span></div>
+        </div>
+
+        <!-- 登录页 -->
+        <div id="loginPage" class="page active">
+            <div class="card">
+                <h2>🎮 创建你的角色</h2>
+                
+                <div class="form-group">
+                    <label>你的名字</label>
+                    <input type="text" id="playerName" placeholder="输入你的名字">
+                </div>
+                
+                <div class="form-group">
+                    <label>选择头像</label>
+                    <div class="avatar-select">
+                        <span class="avatar-option selected" onclick="selectAvatar(this,'🙂')">🙂</span>
+                        <span class="avatar-option" onclick="selectAvatar(this,'😎')">😎</span>
+                        <span class="avatar-option" onclick="selectAvatar(this,'🤠')">🤠</span>
+                        <span class="avatar-option" onclick="selectAvatar(this,'👽')">👽</span>
+                        <span class="avatar-option" onclick="selectAvatar(this,'🤖')">🤖</span>
+                        <span class="avatar-option" onclick="selectAvatar(this,'👻')">👻</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择阵营</label>
+                    <div class="camp-select">
+                        <div class="camp-option service" onclick="selectCamp('service')">
+                            <span class="emoji">🔴</span>
+                            <div class="name">服务方阵营</div>
+                            <div class="desc">业绩 / 客户 / 日完成</div>
+                        </div>
+                        <div class="camp-option new" onclick="selectCamp('new')">
+                            <span class="emoji">🔵</span>
+                            <div class="name">新开方阵营</div>
+                            <div class="desc">配单 / 新开 / 二开</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="teamSelectBox" style="display:none">
+                    <label>选择队伍</label>
+                    <select id="teamSelect">
+                        <option value="">请选择队伍</option>
+                    </select>
+                </div>
+                
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-primary" onclick="createPlayer()">开始游戏</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主菜单 -->
+        <div id="mainMenu" class="page">
+            <div style="text-align:center;margin:15px 0">
+                <div id="menuAvatar" style="font-size:3.5em"></div>
+                <div id="menuName" style="font-weight:bold;font-size:1.2em;margin-top:10px"></div>
+                <div id="menuCamp" style="color:#aaa;margin-top:5px"></div>
+                <div style="margin-top:10px;padding:8px 15px;background:rgba(78,205,196,0.2);border-radius:20px;display:inline-block">
+                    <span style="color:#4ecdc4;font-size:0.85em">房间码: <b id="roomCodeDisplay" style="color:#ffd700;font-size:1.1em">----</b></span>
+                    <button onclick="changeRoom()" style="margin-left:10px;padding:3px 10px;font-size:0.75em;background:rgba(255,255,255,0.2);border:none;border-radius:10px;color:#fff;cursor:pointer">切换</button>
+                </div>
+            </div>
+            
+            <div class="menu">
+                <div class="menu-btn" onclick="showPage('dataPage')">
+                    <div class="icon">📝</div>
+                    <h3>录入数据</h3>
+                    <p>填写业绩获得资源</p>
+                </div>
+                <div class="menu-btn" onclick="showPage('pokemonPage')">
+                    <div class="icon">🐾</div>
+                    <h3>我的宠物</h3>
+                    <p>查看培养的宠物</p>
+                </div>
+                <div class="menu-btn" onclick="showPage('shopPage')">
+                    <div class="icon">🏪</div>
+                    <h3>宠物商店</h3>
+                    <p>购买新宠物</p>
+                </div>
+                <div class="menu-btn" onclick="startBattle()">
+                    <div class="icon">⚔️</div>
+                    <h3>开始对战</h3>
+                    <p>挑战其他玩家</p>
+                </div>
+                <div class="menu-btn" onclick="showPage('rankingPage')">
+                    <div class="icon">🏆</div>
+                    <h3>排行榜</h3>
+                    <p>查看所有玩家</p>
+                </div>
+                <div class="menu-btn" onclick="showPage('settingsPage')">
+                    <div class="icon">⚙️</div>
+                    <h3>设置</h3>
+                    <p>重置角色等</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据录入 -->
+        <div id="dataPage" class="page">
+            <div class="card">
+                <h2>📝 录入今日数据</h2>
+                <div id="dataSubmitStatus"></div>
+                <p style="text-align:center;color:#aaa;margin-bottom:20px">填写你的业绩数据，转化为宠物培养资源</p>
+                
+                <div id="serviceDataForm">
+                    <div class="data-grid">
+                        <div class="form-group">
+                            <label>📊 日完成</label>
+                            <input type="number" id="dailyComplete" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>👥 客户量</label>
+                            <input type="number" id="customerCount" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>💰 对接业绩(万)</label>
+                            <input type="number" id="dealAmount" placeholder="0" step="0.1" onchange="calculateRewards()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="newDataForm" style="display:none">
+                    <div class="data-grid">
+                        <div class="form-group">
+                            <label>📋 配单数</label>
+                            <input type="number" id="orderCount" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>✨ 新开数</label>
+                            <input type="number" id="newCount" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>🔄 二开数</label>
+                            <input type="number" id="reopenCount" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>➕ 今日添加</label>
+                            <input type="number" id="todayAdd" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                        <div class="form-group">
+                            <label>👥 进群数</label>
+                            <input type="number" id="groupCount" placeholder="0" onchange="calculateRewards()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reward-box" id="rewardBox" style="display:none">
+                    <h3>🎁 预计获得奖励</h3>
+                    <div class="reward-items" id="rewardItems"></div>
+                </div>
+                
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-primary" id="submitDataBtn" onclick="submitData()">提交数据</button>
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的宠物 -->
+        <div id="pokemonPage" class="page">
+            <div class="card">
+                <h2>🐾 我的宠物战队</h2>
+                <div class="pokemon-grid" id="myPokemonList"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 宠物详情/培养 -->
+        <div id="pokemonDetailPage" class="page">
+            <div class="card">
+                <h2>🐾 宠物详情</h2>
+                <div id="pokemonDetailContent"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('pokemonPage')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 排行榜 -->
+        <div id="rankingPage" class="page">
+            <div class="card">
+                <h2>🏆 玩家排行榜</h2>
+                <div id="rankingList"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 玩家详情 -->
+        <div id="playerDetailPage" class="page">
+            <div class="card">
+                <h2>👤 玩家资料</h2>
+                <div id="playerDetailContent"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('rankingPage')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div id="settingsPage" class="page">
+            <div class="card">
+                <h2>⚙️ 设置</h2>
+                
+                <!-- 邀请链接 -->
+                <div style="margin:20px 0;padding:20px;background:rgba(78,205,196,0.1);border-radius:15px">
+                    <h3 style="color:#4ecdc4;margin-bottom:15px">🔗 邀请队友</h3>
+                    <p style="color:#aaa;font-size:0.9em;margin-bottom:15px">复制下方链接发给队友，他们打开后自动进入同房间同阵营</p>
+                    
+                    <div style="display:flex;gap:10px;margin-bottom:15px">
+                        <input id="shareLinkArea" type="text" readonly 
+                            style="flex:1;padding:10px;border-radius:10px;border:none;background:rgba(0,0,0,0.3);color:#fff;font-family:monospace;font-size:0.8em">
+                        <button class="btn btn-primary" onclick="copyShareLink()" style="white-space:nowrap">📋 复制链接</button>
+                    </div>
+                    
+                    <div style="background:rgba(255,215,0,0.1);border-radius:10px;padding:15px;margin-top:15px">
+                        <div style="color:#ffd700;font-weight:bold;margin-bottom:10px">📖 使用说明：</div>
+                        <ol style="color:#aaa;font-size:0.85em;padding-left:20px;line-height:1.8">
+                            <li>点击"复制链接"发给队友</li>
+                            <li>队友打开链接后自动进入你的房间</li>
+                            <li>队友选择相同阵营（服务方/新开方）</li>
+                            <li>创建角色后即可互相看到PK</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- 房间信息 -->
+                <div style="margin:20px 0;padding:20px;background:rgba(255,215,0,0.1);border-radius:15px">
+                    <h3 style="color:#ffd700;margin-bottom:15px">🏠 房间信息</h3>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px">
+                        <span style="color:#aaa">房间码:</span>
+                        <span id="settingsRoomCode" style="font-size:1.5em;font-weight:bold;color:#ffd700;font-family:monospace">----</span>
+                        <button class="btn btn-secondary" style="padding:5px 15px;font-size:0.8em" onclick="changeRoom()">切换房间</button>
+                    </div>
+                    <p style="color:#aaa;font-size:0.85em">相同房间码+相同阵营的玩家可以互相看到并进行PK</p>
+                </div>
+                
+                <!-- 重置 -->
+                <div style="text-align:center;margin:30px 0;padding:20px;background:rgba(255,107,107,0.1);border-radius:15px">
+                    <p style="color:#aaa;margin-bottom:15px">⚠️ 重置将清除所有数据，包括角色、宠物和资源</p>
+                    <button class="btn btn-primary" onclick="resetGame()" style="background:linear-gradient(135deg,#ff6b6b,#ee5a5a)">🗑️ 重置角色</button>
+                </div>
+                
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 宠物商店 -->
+        <div id="shopPage" class="page">
+            <div class="card">
+                <h2>🏪 宠物商店</h2>
+                <div class="pokemon-grid" id="shopList"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 选择对手 -->
+        <div id="battleSelectPage" class="page">
+            <div class="card">
+                <h2>⚔️ 选择对手</h2>
+                <p style="text-align:center;color:#aaa;margin-bottom:20px">选择一位玩家进行挑战</p>
+                <div id="battleSelectContent"></div>
+                <div style="text-align:center;margin-top:25px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu')">返回</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 对战 -->
+        <div id="battlePage" class="page">
+            <div class="battle-arena">
+                <div class="battle-field">
+                    <div class="battle-side">
+                        <div class="battle-emoji" id="playerEmoji">🦊</div>
+                        <div class="battle-info">
+                            <div class="name" id="playerName">小火狐</div>
+                            <div class="hp-bar">
+                                <div class="hp-fill high" id="playerHpBar" style="width:100%">100/100</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="battle-side">
+                        <div class="battle-emoji" id="enemyEmoji">🦦</div>
+                        <div class="battle-info">
+                            <div class="name" id="enemyName">小水獭</div>
+                            <div class="hp-bar">
+                                <div class="hp-fill high" id="enemyHpBar" style="width:100%">120/120</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="battle-log" id="battleLog">
+                    <div class="entry">⚔️ 战斗开始！选择技能进行攻击！</div>
+                </div>
+                
+                <div class="moves-grid" id="movesGrid"></div>
+                
+                <div style="text-align:center;margin-top:20px">
+                    <button class="btn btn-secondary" onclick="showPage('mainMenu');endBattle()">退出战斗</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果弹窗 -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal">
+            <div class="emoji" id="resultEmoji">🏆</div>
+            <h2 id="resultTitle">胜利！</h2>
+            <p id="resultMessage">恭喜你赢得了这场战斗！</p>
+            <div class="rewards" id="resultRewards">
+                <div>🎁 获得奖励：</div>
+                <div>金币 +100</div>
+                <div>经验 +50</div>
+            </div>
+            <button class="btn btn-primary" onclick="closeModal()">继续</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
